@@ -1,4 +1,6 @@
 from turtle import Screen
+from food import Food
+from scoreboard import Scoreboard
 import time
 
 from snake import Snake
@@ -10,24 +12,50 @@ screen.title("Snake Game")
 # Turn animation off
 screen.tracer(0)
 
-snake = Snake()
 
-screen.update()
+snake = Snake()
+food = Food()
+score = Scoreboard()
+
+
+### CONTROLING THE SNAKE ###
+# Listening to the keys tapped
+screen.listen()
+screen.onkey(fun=snake.up, key="Up")
+screen.onkey(fun=snake.down, key="Down")
+screen.onkey(fun=snake.left, key="Left")
+screen.onkey(fun=snake.right, key="Right")
+
 
 is_game_on = True
 # Move the segments forward
 while is_game_on:
     # Update the screen before all the segments moved. This way, it'll appear as a snake moving
     screen.update()
-    time.sleep(0.5)
+    time.sleep(0.1)
     snake.move_snake()
+    score.update_scoreboard()
 
-### CONTROLING THE SNAKE ###
-# Listening to the keys tapped
-screen.listen()
-screen.onkey(key="Up", fun=snake.up)
-screen.onkey(key="Down", fun=snake.down)
-screen.onkey(key="Left", fun=snake.left)
-screen.onkey(key="Right", fun=snake.right)
+    # Detect collision with food by checking the distance that separates head of snake and food
+    if snake.head_of_snake.distance(food) < 15:
+        food.refresh_food_location()
+        snake.extend_snake()
+        score.increase_score()
+
+
+    # Detect collision with wall
+    if snake.head_of_snake.xcor() > 290 or snake.head_of_snake.xcor() < -290 or snake.head_of_snake.ycor() > 290 or snake.head_of_snake.ycor() < -290:
+        is_game_on = False
+        score.game_over()
+
+
+    # Detect collision with tail
+    # if head collides with any segment in the tail, then trigger game over
+    # head _of_snake segment should be ignored from the check
+    for segment in snake.segments[1:]:
+        if snake.head_of_snake.distance(segment) < 10:
+            is_game_on = False
+            score.game_over()
+
 
 screen.exitonclick()
